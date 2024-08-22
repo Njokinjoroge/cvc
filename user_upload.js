@@ -17,3 +17,38 @@ program
 
 program.parse(process.argv);
 const options = program.opts();
+
+// Database configuration
+const dbConfig = {
+    host: options.h || 'localhost',
+    user: options.u || 'root',
+    password: options.p || '',
+    database: 'users_db'
+  };
+
+  // Create/rebuild users table
+async function createDatabase() {
+    const connection = await mysql.createConnection({
+        host: dbConfig.host,
+        user: dbConfig.user,
+        password: dbConfig.password,
+    });
+
+    await connection.query(`CREATE DATABASE IF NOT EXISTS ${dbConfig.database}`);
+    await connection.end();
+    console.log(`Database ${dbConfig.database} created or already exists.`);
+}
+async function createTable() {
+    await createDatabase(); // Create the database if it doesn't exist
+    const connection = await mysql.createConnection(dbConfig);
+    const createTableQuery = `
+      CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(100),
+        surname VARCHAR(100),
+        email VARCHAR(100) UNIQUE
+      )`;
+
+    await connection.query(createTableQuery);
+    await connection.end();
+    console.log("Users table created successfully.");}
