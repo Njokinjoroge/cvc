@@ -52,3 +52,35 @@ async function createTable() {
     await connection.query(createTableQuery);
     await connection.end();
     console.log("Users table created successfully.");}
+
+// Process CSV file and insert into database
+async function processFile(filename, dryRun) {
+    const connection = await mysql.createConnection(dbConfig);
+  
+    fs.createReadStream(filename)
+      .pipe(csv())
+      .on('data', async (row) => {
+        const name = capitalize(row.name.trim());
+        const surname = capitalize(row.surname.trim());
+        const email = row.email.trim().toLowerCase();
+        if (!validator.isEmail(email)) {
+            console.error(`Invalid email format: ${email}`);
+            return;
+          }
+          if (!dryRun) {
+            try {
+              const query = 'INSERT INTO users (name, surname, email) VALUES (?, ?, ?)';
+              await connection.execute(query, [name, surname, email]);
+              console.log(`Inserted: ${name} ${surname} (${email})`);
+            } catch (error) {
+              console.error(`Error inserting ${name} ${surname} (${email}):`, error.message);
+            }
+          } else {
+            console.log(`Dry Run - Processed: ${name} ${surname} (${email})`);
+          }
+        })
+        .on('end', async () => {
+            console.log('CSV file processed successfully.');
+            await connection.end();
+          });
+      }
