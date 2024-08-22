@@ -84,3 +84,24 @@ async function processFile(filename, dryRun) {
             await connection.end();
           });
       }
+// Capitalize first letter of each word
+function capitalize(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  }
+  // Handle command-line arguments
+  (async () => {
+    if (options.help) {
+      program.outputHelp();
+    } else if (options.create_table) {
+      await createTable();
+    } else if (options.file) {
+      if (!fs.existsSync(options.file)) {
+        console.error("File not found:", options.file);
+        process.exit(1);
+      }
+      await processFile(options.file, options.dry_run);
+    } else {
+      console.error("No valid options provided. Use --help to see available options.");
+process.exit(1);
+    }
+  })();
